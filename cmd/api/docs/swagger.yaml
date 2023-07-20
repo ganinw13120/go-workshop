@@ -1,0 +1,114 @@
+basePath: /v1
+definitions:
+  echo.HTTPError:
+    properties:
+      message: {}
+    type: object
+  entity.User:
+    properties:
+      birth_date:
+        example: "2006-01-02"
+        type: string
+      id:
+        example: "1234"
+        type: string
+      name:
+        example: John Doe
+        type: string
+      password:
+        example: A1b2C3d$
+        type: string
+      username:
+        example: johndoe
+        type: string
+    type: object
+  handler.CreateResponseBody:
+    properties:
+      birth_date:
+        example: "2006-01-02"
+        type: string
+      name:
+        example: John Doe
+        type: string
+      username:
+        example: johndoe
+        type: string
+    type: object
+host: api.wisesight.dev
+info:
+  contact:
+    email: dev@wisesight.com
+    name: API Support
+    url: https://wisesight.dev/support
+  description: This is a sample Wisesight API template server.
+  termsOfService: https://wisesight.dev/terms/
+  title: Wisesight API Template
+  version: "1.0"
+paths:
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Show all active users in the system
+      operationId: get-all-users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handler.CreateResponseBody'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Show all users
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Create a user in the system
+      operationId: create-user
+      parameters:
+      - description: User data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/entity.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Return user data
+          schema:
+            $ref: '#/definitions/handler.CreateResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Create a user
+      tags:
+      - users
+schemes:
+- https
+swagger: "2.0"
