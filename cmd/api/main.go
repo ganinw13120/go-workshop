@@ -64,7 +64,7 @@ func main() {
 	threadRepo := repository.NewThread(mongoDBAdapter, threadCollection)
 	accountRepo := repository.NewAccount(mongoDBAdapter, accountCollection)
 
-	threadUseCase := usecase.NewThread(threadRepo)
+	threadUseCase := usecase.NewThread(cfg, threadRepo)
 	accountUseCase := usecase.NewAccount(accountRepo)
 
 	threadHandler := handler.NewThread(threadUseCase, logger)

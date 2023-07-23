@@ -10,6 +10,7 @@ type Config struct {
 	MongoDBURI       string `env:"MONGODB_URI"`
 	JWTSecret        string `env:"JWT_SECRET"`
 	JWTSigningMethod string `env:"JWT_SIGNING_METHOD"`
+	EncryptedKey     string `env:"ENCRYPTED_KEY"`
 }
 
 func NewConfig() Config {
