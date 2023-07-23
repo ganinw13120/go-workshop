@@ -52,7 +52,7 @@ func (t timeline) Save(c echo.Context) error {
 
 	var parentThread *primitive.ObjectID
 	if body.ParentThread != nil {
-		parent, err := primitive.ObjectIDFromHex(body.ParentThread)
+		parent, err := primitive.ObjectIDFromHex(*body.ParentThread)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
