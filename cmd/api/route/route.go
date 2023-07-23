@@ -17,7 +17,7 @@ func NewRoute(
 	config config.Config,
 	app *echo.Echo,
 	probeHandler handler.IProbe,
-	timelineHandler handler.ITimeline,
+	threadHandler handler.IThread,
 	accountHandler handler.IAccount,
 ) {
 	app.GET("/", func(c echo.Context) error {
@@ -31,9 +31,9 @@ func NewRoute(
 	u.Use(middleware.NewVerifyJWTAuth([]byte(config.JWTSecret), config.JWTSigningMethod))
 	u.Use(middleware.ExtractJWTClaims)
 
-	t := app.Group("/timeline")
-	t.POST("/", timelineHandler.Save)
-	t.GET("/", timelineHandler.Get)
+	thread := app.Group("/thread")
+	thread.POST("/", threadHandler.Save)
+	thread.GET("/", threadHandler.Get)
 
 	account := app.Group("/account")
 	account.PUT("/", accountHandler.Save)

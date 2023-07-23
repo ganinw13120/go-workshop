@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"github.com/wisesight/go-api-template/pkg/adapter"
 	"github.com/wisesight/go-api-template/pkg/entity"
 	"go.mongodb.org/mongo-driver/bson"
@@ -9,24 +10,24 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type ITimeline interface {
+type IThread interface {
 	GetTimelineFromHashtag(context.Context, string, *string, int) ([]entity.Thread, *string, error)
 	Save(context.Context, entity.Thread) error
 }
 
-type timeline struct {
+type thread struct {
 	mongoDBAdapter   adapter.IMongoDBAdapter
 	threadCollection adapter.IMongoCollection
 }
 
-func NewTimeline(mongoDBAdapter adapter.IMongoDBAdapter, threadCollection adapter.IMongoCollection) *timeline {
-	return &timeline{
+func NewThread(mongoDBAdapter adapter.IMongoDBAdapter, threadCollection adapter.IMongoCollection) *thread {
+	return &thread{
 		mongoDBAdapter:   mongoDBAdapter,
 		threadCollection: threadCollection,
 	}
 }
 
-func (t timeline) GetTimelineFromHashtag(ctx context.Context, hashtag string, cursor *string, pageSize int) ([]entity.Thread, *string, error) {
+func (t thread) GetTimelineFromHashtag(ctx context.Context, hashtag string, cursor *string, pageSize int) ([]entity.Thread, *string, error) {
 	opt := options.Find()
 	opt.SetSort(bson.D{{"_id", 1}})
 	opt.SetLimit(int64(pageSize))
@@ -36,7 +37,9 @@ func (t timeline) GetTimelineFromHashtag(ctx context.Context, hashtag string, cu
 		if err != nil {
 			return nil, nil, err
 		}
-		filter = bson.M{"_id": bson.M{"$gte": lastCursor}}
+		filter = bson.M{"_id": bson.M{"$gte": lastCursor}, "text": bson.M{"$regex": fmt.Sprintf("#%s", hashtag)}}
+	} else {
+		filter = bson.M{"text": bson.M{"$regex": fmt.Sprintf("#%s", hashtag)}}
 	}
 	var threads []entity.Thread
 	err := t.mongoDBAdapter.Find(ctx, t.threadCollection, &threads, filter, opt)
@@ -46,7 +49,7 @@ func (t timeline) GetTimelineFromHashtag(ctx context.Context, hashtag string, cu
 	var nextPage *string
 	if len(threads) >= pageSize {
 		var nextThread entity.Thread
-		nextPageFilter := bson.M{"_id": bson.M{"$gt": threads[pageSize-1].Id}}
+		nextPageFilter := bson.M{"_id": bson.M{"$gt": threads[pageSize-1].Id}, "text": bson.M{"$regex": fmt.Sprintf("#%s", hashtag)}}
 		nextOpt := options.FindOne()
 		opt.SetSort(bson.D{{"_id", 1}})
 		err = t.mongoDBAdapter.FindOne(ctx, t.threadCollection, &nextThread, nextPageFilter, nextOpt)
@@ -58,7 +61,7 @@ func (t timeline) GetTimelineFromHashtag(ctx context.Context, hashtag string, cu
 	return threads, nextPage, nil
 }
 
-func (t timeline) Save(ctx context.Context, thread entity.Thread) error {
+func (t thread) Save(ctx context.Context, thread entity.Thread) error {
 	thread.Id = primitive.NewObjectID()
 	_, err := t.mongoDBAdapter.InsertOne(ctx, t.threadCollection, thread)
 	return err

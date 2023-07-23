@@ -61,13 +61,13 @@ func main() {
 	threadCollection := mongodbClient.Database("go-workshop").Collection("threads")
 	mongoDBAdapter := adapter.NewMongoDBAdapter(mongodbClient)
 
-	timelineRepo := repository.NewTimeline(mongoDBAdapter, threadCollection)
+	threadRepo := repository.NewThread(mongoDBAdapter, threadCollection)
 	accountRepo := repository.NewAccount(mongoDBAdapter, accountCollection)
 
-	timelineUseCase := usecase.NewTimeline(timelineRepo)
+	threadUseCase := usecase.NewThread(threadRepo)
 	accountUseCase := usecase.NewAccount(accountRepo)
 
-	timelineHandler := handler.NewTimeline(timelineUseCase, logger)
+	threadHandler := handler.NewThread(threadUseCase, logger)
 	accountHandler := handler.NewAccount(accountUseCase, logger)
 	probeHandler := handler.NewProbe(mongoDBAdapter, logger)
 
@@ -80,7 +80,7 @@ func main() {
 	app.Use(middleware.SecurityMiddleware())
 	app.Use(middleware.CorsMiddleware())
 
-	route.NewRoute(cfg, app, probeHandler, timelineHandler, accountHandler)
+	route.NewRoute(cfg, app, probeHandler, threadHandler, accountHandler)
 
 	err = app.Start(":5555")
 	if err != nil {

@@ -14,20 +14,20 @@ import (
 
 const DefaultPageSize = 10
 
-type ITimeline interface {
+type IThread interface {
 	Save(c echo.Context) error
 	Get(c echo.Context) error
 }
 
-type timeline struct {
-	timelineUseCase usecase.ITimeline
-	logger          log.ILogger
+type thread struct {
+	threadUseCase usecase.IThread
+	logger        log.ILogger
 }
 
-func NewTimeline(timelineUseCase usecase.ITimeline, logger log.ILogger) *timeline {
-	return &timeline{
-		timelineUseCase: timelineUseCase,
-		logger:          logger,
+func NewThread(threadUseCase usecase.IThread, logger log.ILogger) *thread {
+	return &thread{
+		threadUseCase: threadUseCase,
+		logger:        logger,
 	}
 }
 
@@ -41,7 +41,7 @@ type SaveRequestBody struct {
 type GetRequest struct {
 	Cursor   *string `query:"cursor"`
 	PageSize *int    `query:"page_size"`
-	Hashtag  string  `query:"hashtag"`
+	Hashtag  string  `query:"hashtag" json:"hashtag" validate:"required"`
 }
 
 type GetResponse struct {
@@ -49,17 +49,20 @@ type GetResponse struct {
 	NextPage *string         `json:"next_page"`
 }
 
-func (t timeline) Get(c echo.Context) error {
+func (t thread) Get(c echo.Context) error {
 	body := &GetRequest{}
 	if err := c.Bind(body); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, helper.EchoBindErrorTranslator(err))
 	}
-
+	if err := validator.Validate.Struct(body); err != nil {
+		errs := err.(gpgvalidator.ValidationErrors)
+		return echo.NewHTTPError(http.StatusBadRequest, errs.Translate(validator.Trans))
+	}
 	pageSize := DefaultPageSize
 	if body.PageSize != nil {
 		pageSize = *body.PageSize
 	}
-	result, nextPage, err := t.timelineUseCase.GetTimelineFromHashtag(c.Request().Context(), body.Hashtag, body.Cursor, pageSize)
+	result, nextPage, err := t.threadUseCase.GetTimelineFromHashtag(c.Request().Context(), body.Hashtag, body.Cursor, pageSize)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -70,7 +73,7 @@ func (t timeline) Get(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func (t timeline) Save(c echo.Context) error {
+func (t thread) Save(c echo.Context) error {
 	body := &SaveRequestBody{}
 	if err := c.Bind(body); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, helper.EchoBindErrorTranslator(err))
@@ -101,7 +104,7 @@ func (t timeline) Save(c echo.Context) error {
 		ParentThread: parentThread,
 	}
 
-	err = t.timelineUseCase.Save(c.Request().Context(), thread)
+	err = t.threadUseCase.Save(c.Request().Context(), thread)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
