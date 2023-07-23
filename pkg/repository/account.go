@@ -4,11 +4,12 @@ import (
 	"context"
 	"github.com/wisesight/go-api-template/pkg/adapter"
 	"github.com/wisesight/go-api-template/pkg/entity"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type IAccount interface {
-	GetAccount() ([]*entity.Account, error)
+	GetAccount(ctx context.Context, id string) (*entity.Account, error)
 	Save(context.Context, entity.Account) error
 }
 
@@ -24,8 +25,17 @@ func NewAccount(mongoDBAdapter adapter.IMongoDBAdapter, accountCollection adapte
 	}
 }
 
-func (t account) GetAccount() ([]*entity.Account, error) {
-	return nil, nil
+func (t account) GetAccount(ctx context.Context, id string) (*entity.Account, error) {
+	var account entity.Account
+	userId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+	err = t.mongoDBAdapter.FindOne(ctx, t.accountCollection, &account, bson.M{"_id": userId}, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &account, nil
 }
 
 func (t account) Save(ctx context.Context, account entity.Account) error {

@@ -13,6 +13,7 @@ import (
 
 type IAccount interface {
 	Save(c echo.Context) error
+	Get(c echo.Context) error
 }
 
 type account struct {
@@ -34,6 +35,9 @@ type SaveAccountRequestBody struct {
 	Description     string `json:"description" validate:"required"`
 	Follower        int    `json:"follower" validate:"required"`
 	Following       int    `json:"following" validate:"required"`
+}
+type GetAccountRequest struct {
+	Id string `param:"id" validate:"required"`
 }
 
 func (t account) Save(c echo.Context) error {
@@ -61,4 +65,22 @@ func (t account) Save(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusNoContent, nil)
+}
+
+func (t account) Get(c echo.Context) error {
+	body := &GetAccountRequest{}
+	if err := c.Bind(body); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, helper.EchoBindErrorTranslator(err))
+	}
+	if err := validator.Validate.Struct(body); err != nil {
+		errs := err.(gpgvalidator.ValidationErrors)
+		return echo.NewHTTPError(http.StatusBadRequest, errs.Translate(validator.Trans))
+	}
+
+	account, err := t.accountUseCase.Get(c.Request().Context(), body.Id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, account)
 }

@@ -37,6 +37,7 @@ func NewRoute(
 
 	account := app.Group("/account")
 	account.PUT("/", accountHandler.Save)
+	account.GET("/:id", accountHandler.Get)
 
 	app.GET("/swagger/*", echoSwagger.WrapHandler)
 }

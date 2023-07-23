@@ -7,6 +7,7 @@ import (
 )
 
 type IAccount interface {
+	Get(ctx context.Context, id string) (*entity.Account, error)
 	Save(context.Context, entity.Account) error
 }
 
@@ -22,4 +23,9 @@ func NewAccount(accountRepo repository.IAccount) *account {
 
 func (u account) Save(ctx context.Context, account entity.Account) error {
 	return u.accountRepo.Save(ctx, account)
+}
+
+func (u account) Get(ctx context.Context, id string) (*entity.Account, error) {
+	result, err := u.accountRepo.GetAccount(ctx, id)
+	return result, err
 }
