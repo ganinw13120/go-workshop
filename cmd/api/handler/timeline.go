@@ -29,10 +29,10 @@ func NewTimeline(timelineUseCase usecase.ITimeline, logger log.ILogger) *timelin
 }
 
 type SaveRequestBody struct {
-	Text        string `json:"name" validate:"required"`
-	UserId      string `json:"user_id" validate:"required"`
-	Likes       int    `json:"likes" validate:"required"`
-	RepostCount int    `json:"repost_count" validate:"required"`
+	Text         string  `json:"text" validate:"required"`
+	UserId       string  `json:"user_id" validate:"required"`
+	Likes        int     `json:"likes" validate:"required"`
+	ParentThread *string `json:"parent_thread"`
 }
 
 func (t timeline) Save(c echo.Context) error {
@@ -50,14 +50,23 @@ func (t timeline) Save(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	thread := entity.Thread{
-		Text:        body.Text,
-		UserId:      userId,
-		Likes:       body.Likes,
-		RepostCount: body.RepostCount,
+	var parentThread *primitive.ObjectID
+	if body.ParentThread != nil {
+		parent, err := primitive.ObjectIDFromHex(body.ParentThread)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+		parentThread = &parent
 	}
 
-	err = t.timelineUseCase.Save(thread)
+	thread := entity.Thread{
+		Text:         body.Text,
+		UserId:       userId,
+		Likes:        body.Likes,
+		ParentThread: parentThread,
+	}
+
+	err = t.timelineUseCase.Save(c.Request().Context(), thread)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/wisesight/go-api-template/pkg/usecase"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -53,6 +53,8 @@ func main() {
 		panic(err)
 	}
 
+	accountCollection := mongodbClient.Database("go-workshop").Collection("accounts")
+	threadCollection := mongodbClient.Database("go-workshop").Collection("threads")
 	userCollection := mongodbClient.Database("test").Collection("users")
 	mongoDBAdapter := adapter.NewMongoDBAdapter(mongodbClient)
 
@@ -69,36 +71,35 @@ func main() {
 		panic(err)
 	}
 	app.Use(middleware.RequestID())
-	app.Use(middleware.RequestLoggerMiddleware(logger))
-	app.Use(middleware.ResponseLoggerMiddleware(logger))
+	//app.Use(middleware.RequestLoggerMiddleware(logger))
+	//app.Use(middleware.ResponseLoggerMiddleware(logger))
 	app.Use(middleware.SecurityMiddleware())
 	app.Use(middleware.CorsMiddleware())
 
-	timelineRepo := repository.NewTimeline(mongoDBAdapter)
+	timelineRepo := repository.NewTimeline(mongoDBAdapter, threadCollection)
+	accountRepo := repository.NewAccount(mongoDBAdapter, accountCollection)
 
 	timelineUseCase := usecase.NewTimeline(timelineRepo)
+	accountUseCase := usecase.NewAccount(accountRepo)
 
 	userHandler := handler.NewUser(logger)
 	timelineHandler := handler.NewTimeline(timelineUseCase, logger)
+	accountHandler := handler.NewAccount(accountUseCase, logger)
 	probeHandler := handler.NewProbe(mongoDBAdapter, logger)
 
-	route.NewRoute(cfg, app, userHandler, probeHandler, timelineHandler)
+	route.NewRoute(cfg, app, userHandler, probeHandler, timelineHandler, accountHandler)
 
 	err = app.Start(":5555")
 	if err != nil {
-		go func() {
-			if err := app.Start(":5555"); err != nil && err != http.ErrServerClosed {
-				app.Logger.Fatal("shutting down the server")
-				panic(err)
-			}
-		}()
-
-		quit := make(chan os.Signal, 1)
-		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-		<-quit
-		defer cancel()
-		if err := app.Shutdown(ctx); err != nil {
-			app.Logger.Fatal(err)
-		}
+		fmt.Println(err)
+		app.Logger.Fatal("shutting down the server")
+		panic(err)
+	}
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	defer cancel()
+	if err := app.Shutdown(ctx); err != nil {
+		app.Logger.Fatal(err)
 	}
 }

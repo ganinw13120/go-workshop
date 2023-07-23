@@ -1,12 +1,13 @@
 package usecase
 
 import (
+	"context"
 	"github.com/wisesight/go-api-template/pkg/entity"
 	"github.com/wisesight/go-api-template/pkg/repository"
 )
 
 type ITimeline interface {
-	Save(entity.Thread) error
+	Save(context.Context, entity.Thread) error
 	GetTimelineFromHashtag(hashtag string) ([]*entity.Thread, error)
 }
 
@@ -20,10 +21,10 @@ func NewTimeline(timelineRepo repository.ITimeline) *timeline {
 	}
 }
 
-func (t timeline) GetTimelineFromHashtag(hashtag string) ([]*entity.Thread, error) {
-	return t.GetTimelineFromHashtag(hashtag)
+func (u timeline) GetTimelineFromHashtag(hashtag string) ([]*entity.Thread, error) {
+	return u.timelineRepo.GetTimelineFromHashtag(hashtag)
 }
 
-func (t timeline) Save(thread entity.Thread) error {
-	return t.Save(thread)
+func (u timeline) Save(ctx context.Context, thread entity.Thread) error {
+	return u.timelineRepo.Save(ctx, thread)
 }

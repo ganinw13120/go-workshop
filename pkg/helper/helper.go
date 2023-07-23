@@ -10,6 +10,7 @@ import (
 )
 
 func EchoBindErrorTranslator(err error) string {
+	fmt.Println(err)
 	switch t := err.(*echo.HTTPError).Unwrap().(type) {
 	case *json.UnmarshalTypeError:
 		switch t.Type.Kind() {
