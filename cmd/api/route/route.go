@@ -16,7 +16,6 @@ import (
 func NewRoute(
 	config config.Config,
 	app *echo.Echo,
-	userHandler handler.IUser,
 	probeHandler handler.IProbe,
 	timelineHandler handler.ITimeline,
 	accountHandler handler.IAccount,
@@ -32,12 +31,9 @@ func NewRoute(
 	u.Use(middleware.NewVerifyJWTAuth([]byte(config.JWTSecret), config.JWTSigningMethod))
 	u.Use(middleware.ExtractJWTClaims)
 
-	u.GET("", userHandler.GetAll)
-	u.GET("/", userHandler.GetUser)
-	u.POST("/", userHandler.Create)
-
 	t := app.Group("/timeline")
 	t.POST("/", timelineHandler.Save)
+	t.GET("/", timelineHandler.Get)
 
 	account := app.Group("/account")
 	account.PUT("/", accountHandler.Save)

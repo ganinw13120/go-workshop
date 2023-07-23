@@ -12,8 +12,11 @@ import (
 	"net/http"
 )
 
+const DefaultPageSize = 10
+
 type ITimeline interface {
 	Save(c echo.Context) error
+	Get(c echo.Context) error
 }
 
 type timeline struct {
@@ -33,6 +36,38 @@ type SaveRequestBody struct {
 	UserId       string  `json:"user_id" validate:"required"`
 	Likes        int     `json:"likes" validate:"required"`
 	ParentThread *string `json:"parent_thread"`
+}
+
+type GetRequest struct {
+	Cursor   *string `query:"cursor"`
+	PageSize *int    `query:"page_size"`
+	Hashtag  string  `query:"hashtag"`
+}
+
+type GetResponse struct {
+	Data     []entity.Thread `json:"data"`
+	NextPage *string         `json:"next_page"`
+}
+
+func (t timeline) Get(c echo.Context) error {
+	body := &GetRequest{}
+	if err := c.Bind(body); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, helper.EchoBindErrorTranslator(err))
+	}
+
+	pageSize := DefaultPageSize
+	if body.PageSize != nil {
+		pageSize = *body.PageSize
+	}
+	result, nextPage, err := t.timelineUseCase.GetTimelineFromHashtag(c.Request().Context(), body.Hashtag, body.Cursor, pageSize)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	response := GetResponse{
+		result,
+		nextPage,
+	}
+	return c.JSON(http.StatusOK, response)
 }
 
 func (t timeline) Save(c echo.Context) error {

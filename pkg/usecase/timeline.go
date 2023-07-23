@@ -8,7 +8,7 @@ import (
 
 type ITimeline interface {
 	Save(context.Context, entity.Thread) error
-	GetTimelineFromHashtag(hashtag string) ([]*entity.Thread, error)
+	GetTimelineFromHashtag(ctx context.Context, hashtag string, cursor *string, pageSize int) ([]entity.Thread, *string, error)
 }
 
 type timeline struct {
@@ -21,8 +21,8 @@ func NewTimeline(timelineRepo repository.ITimeline) *timeline {
 	}
 }
 
-func (u timeline) GetTimelineFromHashtag(hashtag string) ([]*entity.Thread, error) {
-	return u.timelineRepo.GetTimelineFromHashtag(hashtag)
+func (u timeline) GetTimelineFromHashtag(ctx context.Context, hashtag string, cursor *string, pageSize int) ([]entity.Thread, *string, error) {
+	return u.timelineRepo.GetTimelineFromHashtag(ctx, hashtag, cursor, pageSize)
 }
 
 func (u timeline) Save(ctx context.Context, thread entity.Thread) error {

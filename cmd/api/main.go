@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/wisesight/go-api-template/cmd/api/middleware"
 	"github.com/wisesight/go-api-template/pkg/usecase"
 	"os"
 	"os/signal"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/wisesight/go-api-template/cmd/api/handler"
-	"github.com/wisesight/go-api-template/cmd/api/middleware"
 	"github.com/wisesight/go-api-template/cmd/api/route"
 	"github.com/wisesight/go-api-template/config"
 	"github.com/wisesight/go-api-template/pkg/adapter"
@@ -53,19 +53,23 @@ func main() {
 		panic(err)
 	}
 
-	accountCollection := mongodbClient.Database("go-workshop").Collection("accounts")
-	threadCollection := mongodbClient.Database("go-workshop").Collection("threads")
-	userCollection := mongodbClient.Database("test").Collection("users")
-	mongoDBAdapter := adapter.NewMongoDBAdapter(mongodbClient)
-
-	userConfig := repository.UserConfig{
-		Timeout: 10 * time.Second,
-	}
-	repository.NewUser(userConfig, mongoDBAdapter, userCollection)
-
 	app := echo.New()
 
 	logger, err := log.NewLoggerZap(&log.ZapConfig{Debug: true})
+
+	accountCollection := mongodbClient.Database("go-workshop").Collection("accounts")
+	threadCollection := mongodbClient.Database("go-workshop").Collection("threads")
+	mongoDBAdapter := adapter.NewMongoDBAdapter(mongodbClient)
+
+	timelineRepo := repository.NewTimeline(mongoDBAdapter, threadCollection)
+	accountRepo := repository.NewAccount(mongoDBAdapter, accountCollection)
+
+	timelineUseCase := usecase.NewTimeline(timelineRepo)
+	accountUseCase := usecase.NewAccount(accountRepo)
+
+	timelineHandler := handler.NewTimeline(timelineUseCase, logger)
+	accountHandler := handler.NewAccount(accountUseCase, logger)
+	probeHandler := handler.NewProbe(mongoDBAdapter, logger)
 
 	if err != nil {
 		panic(err)
@@ -76,18 +80,7 @@ func main() {
 	app.Use(middleware.SecurityMiddleware())
 	app.Use(middleware.CorsMiddleware())
 
-	timelineRepo := repository.NewTimeline(mongoDBAdapter, threadCollection)
-	accountRepo := repository.NewAccount(mongoDBAdapter, accountCollection)
-
-	timelineUseCase := usecase.NewTimeline(timelineRepo)
-	accountUseCase := usecase.NewAccount(accountRepo)
-
-	userHandler := handler.NewUser(logger)
-	timelineHandler := handler.NewTimeline(timelineUseCase, logger)
-	accountHandler := handler.NewAccount(accountUseCase, logger)
-	probeHandler := handler.NewProbe(mongoDBAdapter, logger)
-
-	route.NewRoute(cfg, app, userHandler, probeHandler, timelineHandler, accountHandler)
+	route.NewRoute(cfg, app, probeHandler, timelineHandler, accountHandler)
 
 	err = app.Start(":5555")
 	if err != nil {
