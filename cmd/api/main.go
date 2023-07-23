@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"github.com/wisesight/go-api-template/pkg/usecase"
 	"net/http"
 	"os"
 	"os/signal"
@@ -35,8 +35,6 @@ import (
 // @schemes https
 func main() {
 	cfg := config.NewConfig()
-
-	fmt.Println(cfg)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -76,15 +74,20 @@ func main() {
 	app.Use(middleware.SecurityMiddleware())
 	app.Use(middleware.CorsMiddleware())
 
+	timelineRepo := repository.NewTimeline(mongoDBAdapter)
+
+	timelineUseCase := usecase.NewTimeline(timelineRepo)
+
 	userHandler := handler.NewUser(logger)
+	timelineHandler := handler.NewTimeline(timelineUseCase, logger)
 	probeHandler := handler.NewProbe(mongoDBAdapter, logger)
 
-	route.NewRoute(cfg, app, userHandler, probeHandler)
+	route.NewRoute(cfg, app, userHandler, probeHandler, timelineHandler)
 
-	err = app.Start(":4231")
+	err = app.Start(":5555")
 	if err != nil {
 		go func() {
-			if err := app.Start(":4231"); err != nil && err != http.ErrServerClosed {
+			if err := app.Start(":5555"); err != nil && err != http.ErrServerClosed {
 				app.Logger.Fatal("shutting down the server")
 				panic(err)
 			}
