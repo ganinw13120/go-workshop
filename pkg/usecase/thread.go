@@ -6,6 +6,7 @@ import (
 	"github.com/wisesight/go-api-template/pkg/entity"
 	"github.com/wisesight/go-api-template/pkg/helper"
 	"github.com/wisesight/go-api-template/pkg/repository"
+	"net/url"
 )
 
 type IThread interface {
@@ -42,7 +43,8 @@ func (u thread) GetTimelineFromHashtag(ctx context.Context, hashtag string, curs
 		if err != nil {
 			return nil, nil, err
 		}
-		nextCursor = &encryptedCursor
+		encoded := url.QueryEscape(encryptedCursor)
+		nextCursor = &encoded
 	}
 	return result, nextCursor, nil
 }
