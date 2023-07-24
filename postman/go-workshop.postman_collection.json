@@ -1,0 +1,114 @@
+{
+	"info": {
+		"_postman_id": "8747941f-1599-4423-bd44-7555b05af679",
+		"name": "go-workshop",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25178588"
+	},
+	"item": [
+		{
+			"name": "Save threads",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"text\" : \"แกน #gankub\",\n    \"user_id\" : \"64bce2dfef49da2b39841fbc\",\n    \"likes\" : 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/thread/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"thread",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Save account",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"description\" : \"This is gan\",\n    \"display_name\" : \"gankub\",\n    \"follower\" : 1,\n    \"following\" : 2,\n    \"profile_image_url\" : \"www.google.com\",\n    \"username\" : \"_gan.m\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/account/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"account",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get threads",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/thread/?cursor=krhGy4rU95SXaHnaFZFsj2PYbIluyjObjPgukYvIMhU8QEUw19/mBw==&hashtag=gankub&page_size=5",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"thread",
+						""
+					],
+					"query": [
+						{
+							"key": "cursor",
+							"value": "krhGy4rU95SXaHnaFZFsj2PYbIluyjObjPgukYvIMhU8QEUw19/mBw=="
+						},
+						{
+							"key": "hashtag",
+							"value": "gankub"
+						},
+						{
+							"key": "page_size",
+							"value": "5"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get account",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/account/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"account",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
