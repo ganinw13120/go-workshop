@@ -39,7 +39,6 @@ func (t account) GetAccount(ctx context.Context, id string) (*entity.Account, er
 }
 
 func (t account) Save(ctx context.Context, account entity.Account) error {
-	account.Id = primitive.NewObjectID()
 	_, err := t.mongoDBAdapter.InsertOne(ctx, t.accountCollection, account)
 	return err
 }

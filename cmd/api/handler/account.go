@@ -8,6 +8,7 @@ import (
 	"github.com/wisesight/go-api-template/pkg/log"
 	"github.com/wisesight/go-api-template/pkg/usecase"
 	"github.com/wisesight/go-api-template/pkg/validator"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 )
 
@@ -51,6 +52,7 @@ func (t account) Save(c echo.Context) error {
 	}
 
 	account := entity.Account{
+		Id:              primitive.NewObjectID(),
 		DisplayName:     body.DisplayName,
 		Username:        body.Username,
 		ProfileImageUrl: body.ProfileImageUrl,
